@@ -19,10 +19,5 @@ int main() {
 	int i_max = getMax(array, 10);
 	std::cout << "index = " << getMax(&array[0], 10)  << " val = " << array[i_max] << std::endl;
 
-
-
-
-	std::cout << "dibilnyi hello world!!!" << std::endl;
 	return 0;
-
 }
