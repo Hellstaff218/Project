@@ -17,18 +17,18 @@
 
 # основные команды GIT
 
-git status
-git add .
-git commit -m "..."
-git log
-git log --oneline
-git remote add origin [ssh link]
-git push -u origin master
-git pull origin
-git clone [ssh link] //if publit you may use https
-git tag ..
-git checkout 
-git branch
-git config --global user.name //user.email
+- git status
+- git add .
+- git commit -m "..."
+- git log
+- git log --oneline
+- git remote add origin [ssh link]
+- git push -u origin master
+- git pull origin
+- git clone [ssh link] //if publit you may use https
+- git tag ..
+- git checkout 
+- git branch
+- git config --global user.name //user.email
 
 
