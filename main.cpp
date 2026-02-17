@@ -39,20 +39,23 @@ void showArray(const int* ar, int size, char format) {
 	std::cout << std::dec << std::endl;
 }
 
-int main(char argc, char** argv) {
+int main(int argc, char** argv) {
 	std::cout << (int)argc << std::endl;
-	int i = 0;
-	while(i < argc) {
-		std::cout << i << " : " << argv[i] << std::endl;
-		i++;
 
+	char format = 'g';
+
+	if (argc < 2) {
+		std::cout << std::dec << "dec" << std::endl;
+		format = 'd';
 	}
-	return 0;
+	else {
+		format = argv[1][0];
+	}
 
 	int ar[] = {1,4,2,9,0,-1,-6,10,123,5};
-	showArray(ar, 10, 'g');
+	showArray(ar, 10, format);
 	selectionSort(ar, 10);
-	showArray(ar, 10, 'h');
+	showArray(ar, 10, format);
 
 
 	return 0;
