@@ -1,4 +1,6 @@
-a.out
+*.out
 *.o
 *.cpp~
 *.*~
+no_ext
+*.gch

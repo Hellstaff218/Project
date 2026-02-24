@@ -1,21 +1,8 @@
 #include <iostream>
 
-int getMax(const int* ar, int size) {
-	int ind_max = 0;
-	for (int i = 1; i < size; i++) {
-		if (ar[ind_max] < ar[i]) {
-			ind_max = i;
-		}
-	}
-	return ind_max;
-}
+#include "sorts.h"
 
-void selectionSort(int* ar, int size) {
-	for (int i = 0; i < size; i++) {
-		int indMax = getMax(ar, size - i);
-		std::swap(ar[size - i - 1], ar[indMax]);
-	}
-}
+
 
 void showArray(const int* ar, int size, char format) {
 	switch(format) {
@@ -40,23 +27,11 @@ void showArray(const int* ar, int size, char format) {
 }
 
 int main(int argc, char** argv) {
-	std::cout << (int)argc << std::endl;
 
-	char format = 'g';
+	int ar[10] = {-12,16,1,24,5,6,4,12,9,8};
+	getMax(ar, 10);
 
-	if (argc < 2) {
-		std::cout << std::dec << "dec" << std::endl;
-		format = 'd';
-	}
-	else {
-		format = argv[1][0];
-	}
-
-	int ar[] = {1,4,2,9,0,-1,-6,10,123,5};
-	showArray(ar, 10, format);
 	selectionSort(ar, 10);
-	showArray(ar, 10, format);
-
 
 	return 0;
 }
