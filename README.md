@@ -4,9 +4,16 @@
 
 *in windie* : in cmd or powershell or other write the same "g++ main.cpp" before you need install g++, and write environmental path
 
-когда много файлов: g++ \[файл1\] \[файл2\] \[....\]
+когда много файлов компилировать надо так: g++ \[файл1\] \[файл2\] \[....\]
 
-# Lections
+# Задачи
+
+> [!important]
+> Папка с заданиями : https://disk.yandex.ru/i/1rWm6euojHyyYA
+
+- [SW_1](SW/SW_1.md) (2026.02.24) или [pdf](https://disk.yandex.ru/d/vh5SiIpPKaiskQ)
+
+# Лекции
 
 ## 2026.02.10
 
@@ -24,6 +31,21 @@
 2. аргументы функции main()
 3. С-строки
 4. добили сортировку выбором
+
+## 2026.02.24
+
+1. многофайловый проект
+	1.1. содержание заголовочных файлов
+	1.2. компиляция многофалового проекта ![[make.sh]]
+2. ключи компиляции
+	2.1. -g
+	2.2. -o
+	2.3. -std=c++17
+3. сортировка выбором с ключом isAsc <- добиваем сортировку выбором
+4. разбиение программы на файлы
+5. отладка с помощью gdb
+6. начало тестирования
+7. тернарный оператор
 
 # основные команды GIT
 
@@ -45,7 +67,12 @@
 - git config --global user.name //user.email
 - git rm --cached [file] <- удалить из отслеживаемых, если не успели сделать commit
 
-## основные команыд gdb
+## создание своей команды git (создание alias)
+
+- git config --global alias.logs "log --oneline --graph --all --decorate"
+- git config --global alias.lgst "log --stat --graph --oneline --all --decorate"
+
+# основные команыд gdb
 
 - break [имя функции]
 - break [номер строчки]
@@ -53,15 +80,12 @@
 - info break
 - delete break
 - run - запуск программы на отладку
+- continue - продолжить выполнение программы до точки останова
 - step - войти в функцию
 - next - выполнить операцию не входя в функцию
 - p *\[имя массива\]@\[число элементов в массиве\]
 - p \[имя переменной\]
-
-## создание своей команды
-
-git config --global alias.logs "log --oneline --graph --all --decorate"
-git config --global alias.lgst "log --stat --graph --oneline --all --decorate"
+- p/x [...]
 
 # литература
 
@@ -80,7 +104,8 @@ git config --global alias.lgst "log --stat --graph --oneline --all --decorate"
 
 # Интернет
 
-11. https://ru.cppreference.com/
+1. https://ru.cppreference.com/
+2. https://habr.com
 
 
 
