@@ -1,7 +1,10 @@
 # how to compile
 
 *in linux* : in console write "g++ main.cpp", you will get the a.out
+
 *in windie* : in cmd or powershell or other write the same "g++ main.cpp" before you need install g++, and write environmental path
+
+когда много файлов: g++ \[файл1\] \[файл2\] \[....\]
 
 # Lections
 
@@ -40,6 +43,7 @@
 - git checkout 
 - git branch
 - git config --global user.name //user.email
+- git rm --cached [file] <- удалить из отслеживаемых, если не успели сделать commit
 
 ## создание своей команды
 
