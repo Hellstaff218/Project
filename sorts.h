@@ -8,6 +8,7 @@ int getMax(const int*, int);
 void selectionSort(int* arfdlksajf, int fdsfafsafsize);
 
 
+void selSt(int *r, int s, bool a); 
 
 #endif
 

@@ -45,6 +45,19 @@
 - git config --global user.name //user.email
 - git rm --cached [file] <- удалить из отслеживаемых, если не успели сделать commit
 
+## основные команыд gdb
+
+- break [имя функции]
+- break [номер строчки]
+- break [имя файла:имя строчки]
+- info break
+- delete break
+- run - запуск программы на отладку
+- step - войти в функцию
+- next - выполнить операцию не входя в функцию
+- p *\[имя массива\]@\[число элементов в массиве\]
+- p \[имя переменной\]
+
 ## создание своей команды
 
 git config --global alias.logs "log --oneline --graph --all --decorate"

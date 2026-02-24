@@ -18,3 +18,10 @@ void selectionSort(int* ar, int size) {
 		std::swap(ar[size - i - 1], ar[indMax]);
 	}
 }
+
+void selSt(int *r, int s, bool a) {
+	for (int i = 0; i < s; i++) {
+		int indMax = getMax(&r[a == true ? 0 : i], s - i);
+		std::swap(r[a == true ? indMax : indMax + i], r[a == true ? s - i - 1 : i]);
+	}
+}

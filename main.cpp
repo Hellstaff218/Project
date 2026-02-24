@@ -1,7 +1,8 @@
 #include <iostream>
 
-#include "sorts.h"
 
+#include "sorts.h"
+#include "test_sorts.h"
 
 
 void showArray(const int* ar, int size, char format) {
@@ -28,11 +29,20 @@ void showArray(const int* ar, int size, char format) {
 
 int main(int argc, char** argv) {
 
+	test_selectionSort();
+
+	return 0;
 	int ar[10] = {-12,16,1,24,5,6,4,12,9,8};
 	getMax(ar, 10);
 
 	selectionSort(ar, 10);
 
+	
+	selSt(ar, 10, true); 
+	showArray(ar, 10, 'd');
+	
+	selSt(ar, 10, false); 
+	showArray(ar, 10, 'd');
 	return 0;
 }
 
