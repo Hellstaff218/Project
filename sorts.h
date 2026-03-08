@@ -3,13 +3,10 @@
 
 #include <iostream>
 
+int getMax(const int *, int);
 
-int getMax(const int*, int);
-void selectionSort(int* arfdlksajf, int fdsfafsafsize);
+void selectionSort(int *ar, unsigned int size, bool ascending = true);
 
-
-void selSt(int *r, int s, bool a); 
+void insertionSort(int *ar, unsigned int size, bool ascending = true);
 
 #endif
-
-
