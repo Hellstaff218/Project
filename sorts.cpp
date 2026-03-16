@@ -48,3 +48,45 @@ void insertionSort(int *ar, unsigned int size, bool ascending)
 		ar[j + 1] = key;
 	}
 }
+
+/**
+ * @brief Проверяет массив на отсортированность.
+ *
+ * Функция анализирует порядок элементов массива и определяет,
+ * отсортирован ли он по возрастанию или по убыванию.
+ *
+ * @param array Указатель на массив целых чисел.
+ * @param size Размер массива.
+ *
+ * @return
+ *  1  - массив отсортирован по возрастанию\n
+ * -1  - массив отсортирован по убыванию\n
+ *  0  - массив не отсортирован
+ *
+ * @note Если размер массива меньше 2, массив считается отсортированным.
+ */
+int isSorted(const int *array, unsigned int size)
+{
+	if (size < 2)
+		return 1;
+
+	bool increasing = true;
+	bool decreasing = true;
+
+	for (unsigned int i = 0; i < size - 1; i++)
+	{
+		if (array[i] < array[i + 1])
+			decreasing = false;
+
+		if (array[i] > array[i + 1])
+			increasing = false;
+	}
+
+	if (increasing)
+		return 1;
+
+	if (decreasing)
+		return -1;
+
+	return 0;
+}

@@ -9,4 +9,5 @@ void selectionSort(int *ar, unsigned int size, bool ascending = true);
 
 void insertionSort(int *ar, unsigned int size, bool ascending = true);
 
+int isSorted(const int *array, unsigned int size);
 #endif

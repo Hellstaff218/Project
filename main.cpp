@@ -32,19 +32,17 @@ void showArray(const int *ar, int size, char format)
 int main(int argc, char **argv)
 {
 
-	test_selectionSort();
+	test_isSorted_ascending();
+	test_isSorted_descending();
+	test_isSorted_unsorted();
 
-	// return 0;
-	int ar[10] = {-12, 16, 1, 24, 5, 6, 4, 12, 10, 8};
-	getMax(ar, 10);
+	test_selectionSort_ascending();
+	test_selectionSort_descending();
+	test_selectionSort_sortedInput();
 
-	// selectionSort(ar, 10, true);
-	insertionSort(ar, 10, true);
-	showArray(ar, 10, 'd');
-
-	// selectionSort(ar, 10, false);
-	insertionSort(ar, 10, true);
-	showArray(ar, 10, 'd');
+	test_insertionSort_ascending();
+	test_insertionSort_descending();
+	test_insertionSort_sortedInput();
 
 	return 0;
 }
