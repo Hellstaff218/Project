@@ -17,9 +17,32 @@ void swapHalfWord(unsigned int *words)
 
 void cycleShift(int *number, int N, int left)
 {
-    (void)number;
-    (void)N;
-    (void)left;
+    if (number == nullptr)
+    {
+        return;
+    }
+    const int bitCount = 32;
+    unsigned int value = static_cast<unsigned int>(*number);
+
+    N %= bitCount;
+    if (N < 0)
+    {
+        N += bitCount;
+    }
+    if (N == 0)
+    {
+        return;
+    }
+
+    if (left == 1)
+    {
+        value = (value << N) | (value >> (bitCount - N));
+    }
+    else
+    {
+        value = (value >> N) | (value << (bitCount - N));
+    }
+    *number = static_cast<int>(value);
 }
 
 int getMaxBit(const int *array, int N)
