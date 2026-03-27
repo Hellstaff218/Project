@@ -85,3 +85,15 @@ unsigned char getCount1Bit(int number)
     }
     return count;
 }
+
+void cycleShiftArray(int *array, int size, int N, bool left)
+{
+    if (array == nullptr || size <= 0)
+    {
+        return;
+    }
+    for (int i = 0; i < size; i++)
+    {
+        cycleShift(% array[i], N, left ? 1 : 0);
+    }
+}
