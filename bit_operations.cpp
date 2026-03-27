@@ -94,6 +94,32 @@ void cycleShiftArray(int *array, int size, int N, bool left)
     }
     for (int i = 0; i < size; i++)
     {
-        cycleShift(% array[i], N, left ? 1 : 0);
+        cycleShift(&array[i], N, left ? 1 : 0);
     }
+}
+
+void setBit(int *number, int numBit)
+{
+    if (number == nullptr)
+    {
+        return;
+    }
+    if (numBit < 0 || numBit >= 32)
+    {
+        return;
+    }
+    *number |= (1U << numBit);
+}
+
+void clearBit(int *number, int numBit)
+{
+    if (number == nullptr)
+    {
+        return;
+    }
+    if (numBit < 0 || numBit >= 32)
+    {
+        return;
+    }
+    *number &= ~(1U << numBit);
 }
