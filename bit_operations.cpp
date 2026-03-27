@@ -47,13 +47,41 @@ void cycleShift(int *number, int N, int left)
 
 int getMaxBit(const int *array, int N)
 {
-    (void)array;
-    (void)N;
-    return 0;
+    if (array == nullptr || N <= 0)
+    {
+        return -1;
+    }
+
+    int maxIndex = -1;
+    unsigned char maxCount = 0;
+
+    for (int i = 0; i < N; i++)
+    {
+        if (array[i] < 0)
+        {
+            continue;
+        }
+
+        unsigned char currentCount = getCount1Bit(array[i]);
+
+        if (maxIndex == -1 || currentCount > maxCount)
+        {
+            maxCount = currentCount;
+            maxIndex = i;
+        }
+    }
+
+    return maxIndex;
 }
 
 unsigned char getCount1Bit(int number)
 {
-    (void)number;
-    return 0;
+
+    int count = 0;
+    while (number)
+    {
+        count += number & 1;
+        number >>= 1;
+    }
+    return count;
 }
