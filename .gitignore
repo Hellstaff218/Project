@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.out
 *.o
 *.cpp~
@@ -5,3 +6,6 @@
 no_ext
 *.gch
 *.swp
+=======
+app
+>>>>>>> main

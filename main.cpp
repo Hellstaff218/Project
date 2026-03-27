@@ -1,48 +1,40 @@
 #include <iostream>
+#include <iomanip>
+#include "bit_operations.h"
 
-#include "sorts.h"
-#include "test_sorts.h"
-
-void showArray(const int *ar, int size, char format)
+int main()
 {
-	switch (format)
-	{
-	// 1 2 3 4 5 6 7 8 9 A B C D E F
-	case 'H':
-	case 'h':
-		std::cout << std::hex;
-		break;
-	case 'D':
-	case 'd':
-		std::cout << std::dec;
-		break;
-	default:
-		std::cout << "unknown format for out, set default as decimal" << std::endl;
-		std::cout << std::dec;
-		break;
-	}
+	unsigned int words1 = 0xFFAABBCC;
+	unsigned int words2 = 0x01020304;
 
-	for (int i = 0; i < size; i++)
-	{
-		std::cout << ar[i] << " ";
-	}
-	std::cout << std::dec << std::endl;
-}
+	std::cout << "Before swap:" << std::endl;
+	std::cout << "words1 = 0x" << std::hex << std::uppercase << words1 << std::endl;
+	std::cout << "words2 = 0x" << std::hex << std::uppercase << words2 << std::endl;
 
-int main(int argc, char **argv)
-{
+	swapHalfWord(&words1);
+	swapHalfWord(&words2);
 
-	test_isSorted_ascending();
-	test_isSorted_descending();
-	test_isSorted_unsorted();
+	std::cout << "After swap:" << std::endl;
+	std::cout << "words1 = 0x" << std::hex << std::uppercase << words1 << std::endl;
+	std::cout << "words2 = 0x" << std::hex << std::uppercase << words2 << std::endl;
 
-	test_selectionSort_ascending();
-	test_selectionSort_descending();
-	test_selectionSort_sortedInput();
+	int number = 0x00004000;
+	std::cout << "start = 0x" << std::hex << std::uppercase << number << std::endl;
 
-	test_insertionSort_ascending();
-	test_insertionSort_descending();
-	test_insertionSort_sortedInput();
+	cycleShift(&number, 1, 0);
+	std::cout << "shift right 1 = 0x" << std::hex << number << std::endl;
+
+	cycleShift(&number, 2, 0);
+	std::cout << "shift right 2 = 0x" << std::hex << number << std::endl;
+
+	cycleShift(&number, 3, 1);
+	std::cout << "shift left 3 = 0x" << std::hex << number << std::endl;
+
+	int ar1[5] = {-1, 0xFFFF, 0x00, 0x7F, 0x10101010};
+	int ar2[5] = {-1, -2, -3, -4, -5};
+
+	std::cout << std::dec << getMaxBit(ar1, 5) << std::endl;
+	std::cout << std::dec << getMaxBit(ar2, 5) << std::endl;
 
 	return 0;
 }
