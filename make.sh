@@ -1,3 +1,4 @@
+#!/bin/bash
 clear
-g++ main.cpp sorts.cpp test_sorts.cpp -g -std=c++17 
-./a.out
+g++ -std=c++17 -Wall -Wextra -Werror main.cpp bit_operations.cpp -o app
+./app
