@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include "bit_operations.h"
+#include "file_operations.h"
 
 void printArray(const int *array, int size)
 {
@@ -69,6 +70,10 @@ int main()
 
 		clearBit(&number, 1);
 		std::cout << std::hex << number << std::endl;
+	}
+
+	{
+		fillFile("test.txt", 10, 20, '\t', 4, 12);
 	}
 
 	return 0;
