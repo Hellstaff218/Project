@@ -30,5 +30,11 @@ int main()
     cycleShift(&number, 3, 1);
     std::cout << "shift left 3 = 0x" << std::hex << number << std::endl;
 
+    int ar1[5] = {-1, 0xFFFF, 0x00, 0x7F, 0x10101010};
+    int ar2[5] = {-1, -2, -3, -4, -5};
+
+    std::cout << std::dec << getMaxBit(ar1, 5) << std::endl;
+    std::cout << std::dec << getMaxBit(ar2, 5) << std::endl;
+
     return 0;
 }

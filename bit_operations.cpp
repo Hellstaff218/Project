@@ -76,12 +76,12 @@ int getMaxBit(const int *array, int N)
 
 unsigned char getCount1Bit(int number)
 {
-
-    int count = 0;
-    while (number)
+    unsigned int value = static_cast<unsigned int>(number);
+    unsigned char count = 0;
+    while (value != 0)
     {
-        count += number & 1;
-        number >>= 1;
+        count += static_cast<unsigned char>(value & 1U);
+        value >>= 1;
     }
     return count;
 }
