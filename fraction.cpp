@@ -30,6 +30,7 @@ Fraction::Fraction(int numerator, int denominator)
 {
     _numerator = numerator;
     _denominator = denominator;
+    fracReduction(*this);
 }
 
 int fracReduction(Fraction &frac)
@@ -41,6 +42,7 @@ int fracReduction(Fraction &frac)
 
     if (frac._numerator == 0)
     {
+        frac._denominator = 1;
         return -1;
     }
 
@@ -59,4 +61,38 @@ int fracReduction(Fraction &frac)
     }
 
     return 0;
+}
+
+Fraction sum(const Fraction &fr1, const Fraction &fr2)
+{
+    Fraction result(fr1._numerator * fr2._denominator + fr2._numerator * fr1._denominator,
+                    fr1._denominator * fr2._denominator);
+    return result;
+}
+
+Fraction sub(const Fraction &fr1, const Fraction &fr2)
+{
+    Fraction result(fr1._numerator * fr2._denominator - fr2._numerator * fr1._denominator,
+                    fr1._denominator * fr2._denominator);
+    return result;
+}
+
+Fraction div(const Fraction &fr1, const Fraction &fr2)
+{
+    Fraction result(fr1._numerator * fr2._denominator,
+                    fr1._denominator * fr2._numerator);
+    return result;
+}
+
+Fraction mul(const Fraction &fr1, const Fraction &fr2)
+{
+    Fraction result(fr1._numerator * fr2._numerator,
+                    fr1._denominator * fr2._denominator);
+    return result;
+}
+
+std::ostream &operator<<(std::ostream &out, const Fraction &frac)
+{
+    out << std::dec << frac._numerator << " / " << frac._denominator;
+    return out;
 }

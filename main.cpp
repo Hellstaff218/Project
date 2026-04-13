@@ -3,6 +3,7 @@
 #include "bit_operations.h"
 #include "file_operations.h"
 #include "box.h"
+#include "fraction.h"
 
 void printArray(const int *array, int size)
 {
@@ -100,8 +101,8 @@ int main()
 	}
 
 	{
-		std::cout << "\n================ ДОПОЛНИТЕЛЬНО ================" << std::endl;
-		std::cout << "Тест записи и чтения структуры Box" << std::endl;
+		std::cout << "\n================ RK_1: ЗАДАНИЕ 1 ================" << std::endl;
+		std::cout << "Структура Box" << std::endl;
 		std::cout << "\n=== Тест writeToFile и readFromFile ===" << std::endl;
 
 		Box *temp = new Box();
@@ -109,6 +110,7 @@ int main()
 		temp->_width = 2;
 		temp->_height = 3;
 		temp->_color = 0x00FF00FF;
+		temp->updateVolume();
 
 		writeToFile("temp.bin", *temp);
 		delete temp;
@@ -122,6 +124,33 @@ int main()
 		std::cout << "color  = " << temp1->_color << '\n';
 
 		readFromFile("temp.bin", nullptr);
+
+		std::cout << "\n=== Тест конструкторов Box и operator<< ===" << std::endl;
+		const Box box1(15);
+		std::cout << box1;
+
+		const Box box2;
+		std::cout << box2;
+
+		const Box box3(5, 10, 11);
+		std::cout << box3;
 	}
+
+	{
+		std::cout << "\n================ RK_1: ЗАДАНИЕ 2 ================" << std::endl;
+		std::cout << "Арифметика дробей Fraction" << std::endl;
+		std::cout << "\n=== Тест арифметики Fraction ===" << std::endl;
+
+		const Fraction fr1(10, 20);
+		const Fraction fr2(5, 7);
+
+		std::cout << "fr1 = " << fr1 << std::endl;
+		std::cout << "fr2 = " << fr2 << std::endl;
+		std::cout << "sum(fr1, fr2) = " << sum(fr1, fr2) << std::endl;
+		std::cout << "sub(fr1, fr2) = " << sub(fr1, fr2) << std::endl;
+		std::cout << "div(fr1, fr2) = " << div(fr1, fr2) << std::endl;
+		std::cout << "mul(fr1, fr2) = " << mul(fr1, fr2) << std::endl;
+	}
+
 	return 0;
 }
