@@ -1,27 +1,21 @@
-#ifndef FRACTION_H
-#define FRACTION_H
+#ifndef _fraction_h_
+#define _fraction_h_
 
 #include <iostream>
- 
-struct Fraction {
-    int _numerator;
-    int _denominator;
+#include <cstdlib>
 
-    // Конструкторы
-    Fraction();                           // по умолчанию
-    Fraction(int numerator, int denominator);           // с параметрами
+struct Fraction {
+ int _numerator;
+ int _denominator;
+ Fraction();
+ Fraction(int numerator, int denominator);
 };
 
-// Сокращение дроби (из первой задачи)
 int fracReduction(Fraction& frac);
+std::ostream& operator<<(std::ostream& out, const Fraction& frac);
+Fraction sum(const Fraction& fr1, const Fraction& fr2);
+Fraction sub(const Fraction& fr1, const Fraction& fr2);
+Fraction div(const Fraction& fr1, const Fraction& fr2);
+Fraction mul(const Fraction& fr1, const Fraction& fr2);
 
-// Арифметические операции (из второй задачи)
-Fraction sum(const Fraction& fr1, const Fraction& fr2);  // сложение
-Fraction sub(const Fraction& fr1, const Fraction& fr2);  // вычитание
-Fraction mul(const Fraction& fr1, const Fraction& fr2);  // умножение
-Fraction div(const Fraction& fr1, const Fraction& fr2);  // деление
-
-// Перегрузка оператора вывода
-std::ostream& operator<<(std::ostream& os, const Fraction& frac);
-
-#endif // FRACTION_H
+#endif
