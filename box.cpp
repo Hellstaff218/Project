@@ -1,51 +1,48 @@
 #include "box.h"
-#include <cstdio>
-
-
-
-Box::Box() : len(10), width(10), height(10) {
-    calculateVolume();
+Box::Box() {
+ _len=10;
+ _width=10;
+ _height =10;
+ volume= _len * _width * _height;
+}
+Box::Box(int a){
+ _len=a;
+ _width=a;
+ _height =a;
+ volume= _len * _width * _height;
 }
 
-Box::Box(int value) : len(value), width(value), height(value) {
-    calculateVolume();
+Box::Box(int l, int w, int h){
+ _len=l;
+ _width=w;
+ _height =h;
+ volume= _len * _width * _height;
+}
+void writeToFile(const char* fileName, const struct Box& box) { 
+FILE* file;
+file = fopen (fileName,"w");
+if (!file) {
+ return;
+}
+fprintf(file, "%d %d %d %x\n", box._len, box._width, box._height, box._color);
+fclose(file);
 }
 
-Box::Box(int len, int width, int height) : len(len), width(width), height(height) {
-    calculateVolume();
+
+void readFromFile(const char* fileName, struct Box& box) {
+
+FILE* file;
+file = fopen (fileName,"r");
+if (!file) {
+ return;
 }
-
-void Box::calculateVolume() {
-    volume = len * width * height;
+fscanf (file,"%d %d %d %x", &box._len, &box._width, &box._height, &box._color );
+box.volume = box._len * box._width * box._height;
 }
-
-
-
-std::ostream& operator<<(std::ostream& os, const Box& box) {
-    os << "len = " << box.len
-        << ", width = " << box.width
-        << ", height = " << box.height
-        << ", volume = " << box.volume << "\n";
-    return os;
-}
-
- 
-
-void writeToFile(const char* fileName, const struct Box& box) {
-    FILE* file = nullptr;
-    if (fopen_s(&file, fileName, "wb") == 0 && file != nullptr) {
-        fwrite(&box, sizeof(Box), 1, file);
-        fclose(file);
-    }
-}
-
-void readFromFile(const char* fileName, struct Box* box) {
-    if (fileName == nullptr || box == nullptr) {
-        return; 
-    }
-    FILE* file = nullptr;
-    if (fopen_s(&file, fileName, "rb") == 0 && file != nullptr) {
-        fread(box, sizeof(Box), 1, file);
-        fclose(file);
-    }
+std::ostream& operator<<(std::ostream& file, const Box& box) {
+   file  << "len = " << box._len
+       << ", width = " << box._width
+       << ", height = " << box._height
+       << ", volume = " << box.volume <<'\n';
+    return file;
 }
