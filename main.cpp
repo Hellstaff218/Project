@@ -1,235 +1,316 @@
-#include <iostream>
-#include <iomanip>
-#include "bit_operations.h"
-#include "file_operations.h"
-#include "box.h"
-#include "fraction.h"
+#include "HW1.h"
+#include "sorts.h"
 
-void printArray(const int *array, int size)
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+namespace
 {
-	for (int i = 0; i < size; i++)
-	{
-		std::cout << std::hex << array[i] << " ";
-	}
-	std::cout << std::dec << std::endl;
+const char *kOutputFileName = "HW_1_results.md";
+
+enum class Complexity
+{
+    quadratic,
+    nLogN,
+    shell,
+    linear
+};
+
+struct SortBenchmark
+{
+    const char *title;
+    void (*sortFunc)(int *, int, bool (*)(int, int));
+    Complexity complexity;
+    bool isEnabled = true;
+    bool hasPreviousMeasurement = false;
+    int previousSize = 0;
+    double previousTime = 0.0;
+};
+
+struct Config
+{
+    int minSize = 10;
+    int maxSize = 5000000;
+    int stepSize = 0;
+    double maxTimeMs = 1000.0;
+};
+
+void appendTextToFile(const char *fileName, const std::string &text)
+{
+    char *buffer = new char[text.size() + 1];
+    for (std::size_t i = 0; i < text.size(); i++)
+    {
+        buffer[i] = text[i];
+    }
+    buffer[text.size()] = '\0';
+
+    writeStringToFile(fileName, buffer);
+    delete[] buffer;
 }
 
-int main()
+std::vector<int> buildSizes(const Config &config)
 {
+    std::vector<int> sizes;
 
-	{
-		std::cout << "================ SW_2 ================" << std::endl;
-		std::cout << "Задания по побитовым операциям над числами" << std::endl;
-		std::cout << "=== Тест swapHalfWord и cycleShift ===" << std::endl;
+    if (config.stepSize > 0)
+    {
+        for (int size = config.minSize; size <= config.maxSize; size += config.stepSize)
+        {
+            sizes.push_back(size);
 
-		unsigned int words1 = 0xFFAABBCC;
-		unsigned int words2 = 0x01020304;
+            if (size > config.maxSize - config.stepSize)
+            {
+                break;
+            }
+        }
 
-		std::cout << "Before swap:" << std::endl;
-		std::cout << "words1 = 0x" << std::hex << std::uppercase << words1 << std::endl;
-		std::cout << "words2 = 0x" << std::hex << std::uppercase << words2 << std::endl;
+        if (sizes.empty() || sizes.back() != config.maxSize)
+        {
+            sizes.push_back(config.maxSize);
+        }
 
-		swapHalfWord(&words1);
-		swapHalfWord(&words2);
+        return sizes;
+    }
 
-		std::cout << "After swap:" << std::endl;
-		std::cout << "words1 = 0x" << std::hex << std::uppercase << words1 << std::endl;
-		std::cout << "words2 = 0x" << std::hex << std::uppercase << words2 << std::endl;
+    long long currentSize = config.minSize;
+    bool multiplyByFive = true;
 
-		int number = 0x00004000;
-		std::cout << "start = 0x" << std::hex << std::uppercase << number << std::endl;
+    while (currentSize <= config.maxSize)
+    {
+        sizes.push_back(static_cast<int>(currentSize));
 
-		cycleShift(&number, 1, 0);
-		std::cout << "shift right 1 = 0x" << std::hex << number << std::endl;
+        const long long multiplier = multiplyByFive ? 5LL : 2LL;
+        const long long nextSize = currentSize * multiplier;
+        if (nextSize <= currentSize)
+        {
+            break;
+        }
 
-		cycleShift(&number, 2, 0);
-		std::cout << "shift right 2 = 0x" << std::hex << number << std::endl;
+        currentSize = nextSize;
+        multiplyByFive = !multiplyByFive;
+    }
 
-		cycleShift(&number, 3, 1);
-		std::cout << "shift left 3 = 0x" << std::hex << number << std::endl;
-	}
+    if (sizes.empty() || sizes.back() != config.maxSize)
+    {
+        sizes.push_back(config.maxSize);
+    }
 
-	{
-		std::cout << "\n=== Тест getMaxBit ===" << std::endl;
+    return sizes;
+}
 
-		int ar1[5] = {-1, 0xFFFF, 0x00, 0x7F, 0x10101010};
-		int ar2[5] = {-1, -2, -3, -4, -5};
+double estimateGrowth(Complexity complexity, int previousSize, int currentSize)
+{
+    const double prev = static_cast<double>(previousSize);
+    const double curr = static_cast<double>(currentSize);
 
-		std::cout << "getMaxBit(ar1) = " << std::dec << getMaxBit(ar1, 5) << std::endl;
-		std::cout << "getMaxBit(ar2) = " << std::dec << getMaxBit(ar2, 5) << std::endl;
-	}
+    switch (complexity)
+    {
+    case Complexity::quadratic:
+        return (curr * curr) / (prev * prev);
+    case Complexity::nLogN:
+        return (curr * std::log2(curr)) / (prev * std::log2(prev));
+    case Complexity::shell:
+        return std::pow(curr, 1.5) / std::pow(prev, 1.5);
+    case Complexity::linear:
+        return curr / prev;
+    }
 
-	{
-		std::cout << "\n================ SW_3 ================" << std::endl;
-		std::cout << "Задания по побитовым операциям над массивами и работе с файлами" << std::endl;
-		std::cout << "\n=== Тест cycleShiftArray: простой пример ===" << std::endl;
+    return curr / prev;
+}
 
-		int ar[4] = {0x40, 0x00, 0x80, 0x01};
-		std::cout << "Before shift: ";
-		printArray(ar, 4);
-		cycleShiftArray(ar, 4, 1, true);
-		std::cout << "After shift:  ";
-		printArray(ar, 4);
-	}
+bool isArraySortedByComp(const int *ar, int size, bool (*comp)(int, int))
+{
+    for (int i = 0; i < size - 1; i++)
+    {
+        if (comp(ar[i + 1], ar[i]))
+        {
+            return false;
+        }
+    }
 
-	{
-		std::cout << "\n=== Тест cycleShiftArray: с установленным старшим битом ===" << std::endl;
+    return true;
+}
 
-		int ar[4] = {static_cast<int>(0x80000001), 0x00, 0x80, 0x10};
-		std::cout << "Before shift: ";
-		printArray(ar, 4);
-		cycleShiftArray(ar, 4, 1, true);
-		std::cout << "After shift:  ";
-		printArray(ar, 4);
-	}
+double measureSort(
+    void (*sortFunc)(int *, int, bool (*)(int, int)),
+    const int *source,
+    int size,
+    bool (*comp)(int, int))
+{
+    int *buffer = new int[size];
+    for (int i = 0; i < size; i++)
+    {
+        buffer[i] = source[i];
+    }
 
-	{
-		std::cout << "\n=== Тест setBit и clearBit ===" << std::endl;
+    const double start = getTime(meas::milli);
+    sortFunc(buffer, size, comp);
+    const double finish = getTime(meas::milli);
 
-		int number = 0x0F;
-		setBit(&number, 8);
-		std::cout << "After setBit(8):   0x" << std::hex << number << std::endl;
+    if (!isArraySortedByComp(buffer, size, comp))
+    {
+        std::cerr << "sort error: result is not sorted" << std::endl;
+    }
 
-		clearBit(&number, 1);
-		std::cout << "After clearBit(1): 0x" << std::hex << number << std::endl;
-	}
+    delete[] buffer;
+    return finish - start;
+}
 
-	{
-		std::cout << "\n=== Тест fillFile ===" << std::endl;
-		std::cout << "Запись данных в файл test.txt" << std::endl;
-		fillFile("test.txt", 10, 20, '\t', 4, 12);
-	}
+Config parseArgs(int argc, char **argv)
+{
+    Config config;
 
-	{
-		std::cout << "\n================ RK_1: ЗАДАНИЕ 1 ================" << std::endl;
-		std::cout << "Структура Box" << std::endl;
-		std::cout << "\n=== Тест writeToFile и readFromFile ===" << std::endl;
+    for (int i = 1; i < argc; i++)
+    {
+        const std::string flag = argv[i];
 
-		Box *temp = new Box();
-		temp->_len = 1;
-		temp->_width = 2;
-		temp->_height = 3;
-		temp->_color = 0x00FF00FF;
-		temp->updateVolume();
+        if ((flag == "--max_time" || flag == "--mat_time") && i + 1 < argc)
+        {
+            config.maxTimeMs = std::stod(argv[++i]);
+        }
+        else if (flag == "--min_size" && i + 1 < argc)
+        {
+            config.minSize = std::stoi(argv[++i]);
+        }
+        else if (flag == "--max_size" && i + 1 < argc)
+        {
+            config.maxSize = std::stoi(argv[++i]);
+        }
+        else if (flag == "--step_size" && i + 1 < argc)
+        {
+            config.stepSize = std::stoi(argv[++i]);
+        }
+    }
 
-		writeToFile("temp.bin", *temp);
-		delete temp;
+    if (config.minSize < 1)
+    {
+        config.minSize = 1;
+    }
 
-		Box *temp1 = new Box();
-		readFromFile("temp.bin", temp1);
+    if (config.maxSize < config.minSize)
+    {
+        config.maxSize = config.minSize;
+    }
 
-		std::cout << "len    = " << temp1->_len << '\n';
-		std::cout << "width  = " << temp1->_width << '\n';
-		std::cout << "height = " << temp1->_height << '\n';
-		std::cout << "color  = " << temp1->_color << '\n';
+    if (config.maxTimeMs <= 0.0)
+    {
+        config.maxTimeMs = 1000.0;
+    }
 
-		readFromFile("temp.bin", nullptr);
-		delete temp1;
+    if (config.stepSize < 0)
+    {
+        config.stepSize = 0;
+    }
 
-		std::cout << "\n=== Тест конструкторов Box и operator<< ===" << std::endl;
-		const Box box1(15);
-		std::cout << box1;
+    return config;
+}
 
-		const Box box2;
-		std::cout << box2;
+std::string formatTimeValue(double value)
+{
+    char *buffer = convertDoubleToStr(value);
+    const std::string result(buffer);
+    delete[] buffer;
+    return result;
+}
 
-		const Box box3(5, 10, 11);
-		std::cout << box3;
-	}
+void writeHeader(const char *fileName)
+{
+    appendTextToFile(fileName, "| кол-во элементов | пузырьковая сортировка | сортировка выбором | сортировка вставками | сортировка слиянием | быстрая сортировка | сортировка Шелла | сортировка подсчётом |\n");
+    appendTextToFile(fileName, "| :--------------: | :--------------------: | :----------------: | :-------------------: | :-----------------: | :----------------: | :---------------: | :------------------: |\n");
+}
+}
 
-	{
-		std::cout << "\n================ RK_1: ЗАДАНИЕ 2 ================" << std::endl;
-		std::cout << "Арифметика дробей Fraction" << std::endl;
-		std::cout << "\n=== Тест арифметики Fraction ===" << std::endl;
+int main(int argc, char **argv)
+{
+    const Config config = parseArgs(argc, argv);
+    const std::vector<int> sizes = buildSizes(config);
 
-		const Fraction fr1(10, 20);
-		const Fraction fr2(5, 7);
+    {
+        std::ofstream clearFile(kOutputFileName, std::ios::trunc);
+    }
 
-		std::cout << "fr1 = " << fr1 << std::endl;
-		std::cout << "fr2 = " << fr2 << std::endl;
-		std::cout << "sum(fr1, fr2) = " << sum(fr1, fr2) << std::endl;
-		std::cout << "sub(fr1, fr2) = " << sub(fr1, fr2) << std::endl;
-		std::cout << "div(fr1, fr2) = " << div(fr1, fr2) << std::endl;
-		std::cout << "mul(fr1, fr2) = " << mul(fr1, fr2) << std::endl;
-	}
+    writeHeader(kOutputFileName);
 
-	{
-		std::cout << "\n================ SW_5: ЗАДАНИЕ 1 ================" << std::endl;
-		std::cout << "Box с уникальными номерами" << std::endl;
+    std::vector<SortBenchmark> benchmarks = {
+        {"bubble", bubbleSort, Complexity::quadratic},
+        {"selection", selectionSort, Complexity::quadratic},
+        {"insertion", insertionSort, Complexity::quadratic},
+        {"merge", mergeSort, Complexity::nLogN},
+        {"quick", quickSort, Complexity::nLogN},
+        {"shell", sortShell, Complexity::shell},
+        {"count", countSort, Complexity::linear},
+    };
 
-		Box *boxes[10] = {};
-		std::cout << "Начальное состояние. ";
-		printBoxNumberState(std::cout);
+    for (const int size : sizes)
+    {
+        int *source = new int[size];
+        randomFillAr(source, size);
 
-		std::cout << "\nСоздаем boxes[0] = new Box(10, 12, 13)" << std::endl;
-		boxes[0] = new Box(10, 12, 13);
-		std::cout << *boxes[0];
-		printBoxNumberState(std::cout);
+        std::string row = "| ";
+        row += std::to_string(size);
+        row += " ";
 
-		std::cout << "\nСоздаем boxes[1] = new Box(1, 2, 3)" << std::endl;
-		boxes[1] = new Box(1, 2, 3);
-		std::cout << *boxes[1];
-		printBoxNumberState(std::cout);
+        for (SortBenchmark &benchmark : benchmarks)
+        {
+            row += "| ";
 
-		std::cout << "\nУдаляем boxes[1]" << std::endl;
-		delete boxes[1];
-		boxes[1] = nullptr;
-		printBoxNumberState(std::cout);
+            if (!benchmark.isEnabled)
+            {
+                row += "--- ";
+                continue;
+            }
 
-		std::cout << "\nСоздаем boxes[2] = new Box(1, 2, 3)" << std::endl;
-		boxes[2] = new Box(1, 2, 3);
-		std::cout << *boxes[2];
-		printBoxNumberState(std::cout);
+            if (benchmark.hasPreviousMeasurement)
+            {
+                const double estimatedTime =
+                    benchmark.previousTime * estimateGrowth(
+                                                  benchmark.complexity,
+                                                  benchmark.previousSize,
+                                                  size);
 
-		std::cout << "\nУдаляем boxes[0]" << std::endl;
-		delete boxes[0];
-		boxes[0] = nullptr;
-		printBoxNumberState(std::cout);
+                if (estimatedTime > config.maxTimeMs)
+                {
+                    benchmark.isEnabled = false;
+                    row += "--- ";
+                    continue;
+                }
+            }
 
-		std::cout << "\nСоздаем boxes[3] = new Box(1, 2, 3)" << std::endl;
-		boxes[3] = new Box(1, 2, 3);
-		std::cout << *boxes[3];
-		printBoxNumberState(std::cout);
+            const double elapsed = measureSort(benchmark.sortFunc, source, size, lessComp);
+            row += formatTimeValue(elapsed);
+            row += " ";
 
-		std::cout << "\nСоздаем boxes[0] = new Box(2, 3, 4)" << std::endl;
-		boxes[0] = new Box(2, 3, 4);
-		std::cout << *boxes[0];
-		printBoxNumberState(std::cout);
+            benchmark.hasPreviousMeasurement = true;
+            benchmark.previousSize = size;
+            benchmark.previousTime = elapsed;
 
-		std::cout << "\nСоздаем локальный Box box4(1, 2, 2)" << std::endl;
-		const Box box4(1, 2, 2);
-		std::cout << box4;
-		printBoxNumberState(std::cout);
+            if (elapsed > config.maxTimeMs)
+            {
+                benchmark.isEnabled = false;
+            }
+        }
 
-		std::cout << "\nСоздаем локальный Box negativeBox(-1, 2, 3)" << std::endl;
-		const Box negativeBox(-1, 2, 3);
-		std::cout << negativeBox;
-		printBoxNumberState(std::cout);
+        row += "|\n";
+        appendTextToFile(kOutputFileName, row);
 
-		std::cout << "\nУдаляем boxes[0], boxes[2], boxes[3]" << std::endl;
-		delete boxes[0];
-		delete boxes[2];
-		delete boxes[3];
-		boxes[0] = nullptr;
-		boxes[2] = nullptr;
-		boxes[3] = nullptr;
-		printBoxNumberState(std::cout);
-	}
+        delete[] source;
+    }
 
-	{
-		std::cout << "\n================ SW_5: ЗАДАНИЕ 2 ================" << std::endl;
-		std::cout << "Палиндром в битовом представлении" << std::endl;
+    std::cout << "Results saved to " << kOutputFileName << std::endl;
+    std::cout << "max_time = " << config.maxTimeMs << " ms" << std::endl;
+    std::cout << "min_size = " << config.minSize << std::endl;
+    std::cout << "max_size = " << config.maxSize << std::endl;
+    if (config.stepSize > 0)
+    {
+        std::cout << "step_size = " << config.stepSize << std::endl;
+    }
+    else
+    {
+        std::cout << "step_size = variable" << std::endl;
+    }
 
-		const int value0 = static_cast<int>(0x80000001U);
-		const int value1 = 0x101;
-		const int value2 = static_cast<int>(0xC0018003U);
-
-		std::cout << std::boolalpha;
-		std::cout << "isPalindromNumber(0x80000001) = " << isPalindromNumber(value0) << std::endl;
-		std::cout << "isPalindromNumber(0x101) = " << isPalindromNumber(value1) << std::endl;
-		std::cout << "isPalindromNumber(0xC0018003) = " << isPalindromNumber(value2) << std::endl;
-		std::cout << std::noboolalpha;
-	}
-
-	return 0;
+    return 0;
 }
