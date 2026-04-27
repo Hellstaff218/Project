@@ -123,3 +123,21 @@ void clearBit(int *number, int numBit)
     }
     *number &= ~(1U << numBit);
 }
+
+bool isPalindromNumber(const int number)
+{
+    const unsigned int value = static_cast<unsigned int>(number);
+
+    for (int i = 0; i < 16; i++)
+    {
+        const unsigned int leftBit = (value >> i) & 1U;
+        const unsigned int rightBit = (value >> (31 - i)) & 1U;
+
+        if (leftBit != rightBit)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

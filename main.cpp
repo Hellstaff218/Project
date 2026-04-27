@@ -216,5 +216,20 @@ int main()
 		printBoxNumberState(std::cout);
 	}
 
+	{
+		std::cout << "\n================ SW_5: ЗАДАНИЕ 2 ================" << std::endl;
+		std::cout << "Палиндром в битовом представлении" << std::endl;
+
+		const int value0 = static_cast<int>(0x80000001U);
+		const int value1 = 0x101;
+		const int value2 = static_cast<int>(0xC0018003U);
+
+		std::cout << std::boolalpha;
+		std::cout << "isPalindromNumber(0x80000001) = " << isPalindromNumber(value0) << std::endl;
+		std::cout << "isPalindromNumber(0x101) = " << isPalindromNumber(value1) << std::endl;
+		std::cout << "isPalindromNumber(0xC0018003) = " << isPalindromNumber(value2) << std::endl;
+		std::cout << std::noboolalpha;
+	}
+
 	return 0;
 }
