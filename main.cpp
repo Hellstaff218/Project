@@ -124,6 +124,7 @@ int main()
 		std::cout << "color  = " << temp1->_color << '\n';
 
 		readFromFile("temp.bin", nullptr);
+		delete temp1;
 
 		std::cout << "\n=== Тест конструкторов Box и operator<< ===" << std::endl;
 		const Box box1(15);
@@ -150,6 +151,69 @@ int main()
 		std::cout << "sub(fr1, fr2) = " << sub(fr1, fr2) << std::endl;
 		std::cout << "div(fr1, fr2) = " << div(fr1, fr2) << std::endl;
 		std::cout << "mul(fr1, fr2) = " << mul(fr1, fr2) << std::endl;
+	}
+
+	{
+		std::cout << "\n================ SW_5: ЗАДАНИЕ 1 ================" << std::endl;
+		std::cout << "Box с уникальными номерами" << std::endl;
+
+		Box *boxes[10] = {};
+		std::cout << "Начальное состояние. ";
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем boxes[0] = new Box(10, 12, 13)" << std::endl;
+		boxes[0] = new Box(10, 12, 13);
+		std::cout << *boxes[0];
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем boxes[1] = new Box(1, 2, 3)" << std::endl;
+		boxes[1] = new Box(1, 2, 3);
+		std::cout << *boxes[1];
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nУдаляем boxes[1]" << std::endl;
+		delete boxes[1];
+		boxes[1] = nullptr;
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем boxes[2] = new Box(1, 2, 3)" << std::endl;
+		boxes[2] = new Box(1, 2, 3);
+		std::cout << *boxes[2];
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nУдаляем boxes[0]" << std::endl;
+		delete boxes[0];
+		boxes[0] = nullptr;
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем boxes[3] = new Box(1, 2, 3)" << std::endl;
+		boxes[3] = new Box(1, 2, 3);
+		std::cout << *boxes[3];
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем boxes[0] = new Box(2, 3, 4)" << std::endl;
+		boxes[0] = new Box(2, 3, 4);
+		std::cout << *boxes[0];
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем локальный Box box4(1, 2, 2)" << std::endl;
+		const Box box4(1, 2, 2);
+		std::cout << box4;
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nСоздаем локальный Box negativeBox(-1, 2, 3)" << std::endl;
+		const Box negativeBox(-1, 2, 3);
+		std::cout << negativeBox;
+		printBoxNumberState(std::cout);
+
+		std::cout << "\nУдаляем boxes[0], boxes[2], boxes[3]" << std::endl;
+		delete boxes[0];
+		delete boxes[2];
+		delete boxes[3];
+		boxes[0] = nullptr;
+		boxes[2] = nullptr;
+		boxes[3] = nullptr;
+		printBoxNumberState(std::cout);
 	}
 
 	return 0;
