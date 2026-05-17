@@ -1,10 +1,72 @@
-# how to compile
+# Сборка и запуск
 
-*in linux* : in console write "g++ main.cpp", you will get the a.out
+Проект собирается через `Makefile`.
 
-*in windie* : in cmd or powershell or other write the same "g++ main.cpp" before you need install g++, and write environmental path
+- объектные файлы складываются в `build/`
+- итоговый исполняемый файл создаётся в корне как `./app`
+- скрипты лежат в папке `scripts/`
 
-когда много файлов компилировать надо так: g++ \[файл1\] \[файл2\] \[....\]
+## Быстрая сборка
+
+```bash
+./scripts/build.sh
+```
+
+## Сборка и запуск одной командой
+
+```bash
+./scripts/run.sh
+```
+
+## Требования
+
+- Linux / WSL
+- `g++`
+- `make`
+- `gnuplot` для показа графиков и сохранения `jpeg`
+
+## Примеры запуска
+
+### HW_2: постоянное напряжение `constV`
+
+```bash
+./scripts/run.sh -R1=100k -R2=1k -C1=100u --signal=constV
+./scripts/run.sh -R1=100k -R2=1k -C1=100u --signal=constV -E1=12
+./scripts/run.sh -R1=47k -R2=10k -C1=220u --signal=constV -E1=5 --step=0.01 -T=1
+./scripts/run.sh -R1=10k -R2=100k -C1=47u --signal=constV --charge=true --discharge=false
+./scripts/run.sh -R1=10k -R2=100k -C1=47u --signal=constV --charge=false --discharge=true
+./scripts/run.sh -R1=100k -R2=1k -C1=100u --signal=constV --jpeg=const_signal.jpeg
+```
+
+### HW_2: переменные сигналы
+
+```bash
+./scripts/run.sh -R1=100k -R2=200k -C1=100u --signal=sin
+./scripts/run.sh -R1=100k -R2=200k -C1=100u --signal=sin -E1=15 --step=0.05 --jpeg=sin_signal.jpeg
+./scripts/run.sh -R1=33k -R2=120k -C1=68u --signal=triangle -E1=8 -T=12
+./scripts/run.sh -R1=33k -R2=120k -C1=68u --signal=sawtooth -E1=8 -T=12 --jpeg=saw.jpeg
+./scripts/run.sh -R1=22k -R2=220k -C1=10u --signal=meandr -E1=10 --step=0.02
+./scripts/run.sh -R1=22k -R2=220k -C1=10u --signal=halfSin -E1=10 -T=9.42
+./scripts/run.sh -R1=22k -R2=220k -C1=10u --signal=rectSin -E1=10 -T=9.42 --jpeg=rectsin.jpeg
+```
+
+### HW_2: допустимые единицы измерения в параметрах
+
+```bash
+-R1=100k
+-R2=1M
+-C1=100u
+-T=8
+```
+
+Поддерживаются суффиксы:
+
+- `p` - pico
+- `n` - nano
+- `u` - micro
+- `k` - kilo
+- `M` - mega
+- `G` - giga
 
 # Задачи
 
