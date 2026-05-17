@@ -1,315 +1,334 @@
-#include "HW1.h"
-#include "sorts.h"
+#include "gnuplot.h"
+#include "research_cond.h"
 
 #include <cmath>
-#include <fstream>
+#include <exception>
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace
 {
-const char *kOutputFileName = "HW_1_results.md";
+constexpr double kPi = 3.14159265358979323846;
 
-enum class Complexity
+struct AppConfig
 {
-    quadratic,
-    nLogN,
-    shell,
-    linear
+    double r1 = 100000.0;
+    double r2 = 1000.0;
+    double c1 = 100e-6;
+    double e1 = 10.0;
+    double totalTime = 8.0 * kPi;
+    double stepTime = 0.0;
+    TypeSignal signal = TypeSignal::constV;
+    bool charge = true;
+    bool discharge = true;
+    std::string jpegFileName;
 };
 
-struct SortBenchmark
+double parseMetricValue(const std::string &text)
 {
-    const char *title;
-    void (*sortFunc)(int *, int, bool (*)(int, int));
-    Complexity complexity;
-    bool isEnabled = true;
-    bool hasPreviousMeasurement = false;
-    int previousSize = 0;
-    double previousTime = 0.0;
-};
-
-struct Config
-{
-    int minSize = 10;
-    int maxSize = 5000000;
-    int stepSize = 0;
-    double maxTimeMs = 1000.0;
-};
-
-void appendTextToFile(const char *fileName, const std::string &text)
-{
-    char *buffer = new char[text.size() + 1];
-    for (std::size_t i = 0; i < text.size(); i++)
+    if (text.empty())
     {
-        buffer[i] = text[i];
-    }
-    buffer[text.size()] = '\0';
-
-    writeStringToFile(fileName, buffer);
-    delete[] buffer;
-}
-
-std::vector<int> buildSizes(const Config &config)
-{
-    std::vector<int> sizes;
-
-    if (config.stepSize > 0)
-    {
-        for (int size = config.minSize; size <= config.maxSize; size += config.stepSize)
-        {
-            sizes.push_back(size);
-
-            if (size > config.maxSize - config.stepSize)
-            {
-                break;
-            }
-        }
-
-        if (sizes.empty() || sizes.back() != config.maxSize)
-        {
-            sizes.push_back(config.maxSize);
-        }
-
-        return sizes;
+        throw std::invalid_argument("empty value");
     }
 
-    long long currentSize = config.minSize;
-    bool multiplyByFive = true;
+    std::string numberPart = text;
+    double multiplier = 1.0;
 
-    while (currentSize <= config.maxSize)
+    const char suffix = text.back();
+    if ((suffix >= 'A' && suffix <= 'Z') || (suffix >= 'a' && suffix <= 'z'))
     {
-        sizes.push_back(static_cast<int>(currentSize));
-
-        const long long multiplier = multiplyByFive ? 5LL : 2LL;
-        const long long nextSize = currentSize * multiplier;
-        if (nextSize <= currentSize)
+        numberPart = text.substr(0, text.size() - 1);
+        switch (suffix)
         {
+        case 'p':
+        case 'P':
+            multiplier = 1e-12;
             break;
-        }
-
-        currentSize = nextSize;
-        multiplyByFive = !multiplyByFive;
-    }
-
-    if (sizes.empty() || sizes.back() != config.maxSize)
-    {
-        sizes.push_back(config.maxSize);
-    }
-
-    return sizes;
-}
-
-double estimateGrowth(Complexity complexity, int previousSize, int currentSize)
-{
-    const double prev = static_cast<double>(previousSize);
-    const double curr = static_cast<double>(currentSize);
-
-    switch (complexity)
-    {
-    case Complexity::quadratic:
-        return (curr * curr) / (prev * prev);
-    case Complexity::nLogN:
-        return (curr * std::log2(curr)) / (prev * std::log2(prev));
-    case Complexity::shell:
-        return std::pow(curr, 1.5) / std::pow(prev, 1.5);
-    case Complexity::linear:
-        return curr / prev;
-    }
-
-    return curr / prev;
-}
-
-bool isArraySortedByComp(const int *ar, int size, bool (*comp)(int, int))
-{
-    for (int i = 0; i < size - 1; i++)
-    {
-        if (comp(ar[i + 1], ar[i]))
-        {
-            return false;
+        case 'n':
+        case 'N':
+            multiplier = 1e-9;
+            break;
+        case 'u':
+        case 'U':
+            multiplier = 1e-6;
+            break;
+        case 'k':
+            multiplier = 1e3;
+            break;
+        case 'M':
+            multiplier = 1e6;
+            break;
+        case 'G':
+            multiplier = 1e9;
+            break;
+        default:
+            throw std::invalid_argument("unsupported suffix: " + text);
         }
     }
 
-    return true;
+    return std::stod(numberPart) * multiplier;
 }
 
-double measureSort(
-    void (*sortFunc)(int *, int, bool (*)(int, int)),
-    const int *source,
-    int size,
-    bool (*comp)(int, int))
+bool parseBoolValue(const std::string &text)
 {
-    int *buffer = new int[size];
-    for (int i = 0; i < size; i++)
+    if (text == "true" || text == "1" || text == "on")
     {
-        buffer[i] = source[i];
+        return true;
     }
 
-    const double start = getTime(meas::milli);
-    sortFunc(buffer, size, comp);
-    const double finish = getTime(meas::milli);
-
-    if (!isArraySortedByComp(buffer, size, comp))
+    if (text == "false" || text == "0" || text == "off")
     {
-        std::cerr << "sort error: result is not sorted" << std::endl;
+        return false;
     }
 
-    delete[] buffer;
-    return finish - start;
+    throw std::invalid_argument("invalid bool value: " + text);
 }
 
-Config parseArgs(int argc, char **argv)
+TypeSignal parseSignal(const std::string &text)
 {
-    Config config;
+    if (text == "constV")
+    {
+        return TypeSignal::constV;
+    }
+
+    if (text == "meandr")
+    {
+        return TypeSignal::meandr;
+    }
+
+    if (text == "sin" || text == "sinus")
+    {
+        return TypeSignal::sinus;
+    }
+
+    if (text == "triangle")
+    {
+        return TypeSignal::triangle;
+    }
+
+    if (text == "sawtooth")
+    {
+        return TypeSignal::sawtooth;
+    }
+
+    if (text == "halfSin" || text == "halfSinus")
+    {
+        return TypeSignal::halfSinus;
+    }
+
+    if (text == "rectSin" || text == "doubleHalfSinus")
+    {
+        return TypeSignal::doubleHalfSinus;
+    }
+
+    throw std::invalid_argument("unsupported signal: " + text);
+}
+
+std::string getValueAfterPrefix(const std::string &arg, const std::string &prefix)
+{
+    return arg.substr(prefix.size());
+}
+
+AppConfig parseArgs(int argc, char **argv)
+{
+    AppConfig config;
 
     for (int i = 1; i < argc; i++)
     {
-        const std::string flag = argv[i];
+        const std::string arg = argv[i];
 
-        if ((flag == "--max_time" || flag == "--mat_time") && i + 1 < argc)
+        if (arg.rfind("-R1=", 0) == 0)
         {
-            config.maxTimeMs = std::stod(argv[++i]);
+            config.r1 = parseMetricValue(getValueAfterPrefix(arg, "-R1="));
         }
-        else if (flag == "--min_size" && i + 1 < argc)
+        else if (arg.rfind("-R2=", 0) == 0)
         {
-            config.minSize = std::stoi(argv[++i]);
+            config.r2 = parseMetricValue(getValueAfterPrefix(arg, "-R2="));
         }
-        else if (flag == "--max_size" && i + 1 < argc)
+        else if (arg.rfind("-C1=", 0) == 0)
         {
-            config.maxSize = std::stoi(argv[++i]);
+            config.c1 = parseMetricValue(getValueAfterPrefix(arg, "-C1="));
         }
-        else if (flag == "--step_size" && i + 1 < argc)
+        else if (arg.rfind("-E1=", 0) == 0)
         {
-            config.stepSize = std::stoi(argv[++i]);
+            config.e1 = std::stod(getValueAfterPrefix(arg, "-E1="));
+        }
+        else if (arg.rfind("-T=", 0) == 0)
+        {
+            config.totalTime = parseMetricValue(getValueAfterPrefix(arg, "-T="));
+        }
+        else if (arg.rfind("--step=", 0) == 0)
+        {
+            config.stepTime = parseMetricValue(getValueAfterPrefix(arg, "--step="));
+        }
+        else if (arg.rfind("--signal=", 0) == 0)
+        {
+            config.signal = parseSignal(getValueAfterPrefix(arg, "--signal="));
+        }
+        else if (arg.rfind("--jpeg=", 0) == 0)
+        {
+            config.jpegFileName = getValueAfterPrefix(arg, "--jpeg=");
+        }
+        else if (arg.rfind("--charge=", 0) == 0)
+        {
+            config.charge = parseBoolValue(getValueAfterPrefix(arg, "--charge="));
+        }
+        else if (arg.rfind("--discharge=", 0) == 0)
+        {
+            config.discharge = parseBoolValue(getValueAfterPrefix(arg, "--discharge="));
         }
     }
 
-    if (config.minSize < 1)
+    if (config.r1 <= 0.0)
     {
-        config.minSize = 1;
+        config.r1 = 1.0;
     }
 
-    if (config.maxSize < config.minSize)
+    if (config.r2 <= 0.0)
     {
-        config.maxSize = config.minSize;
+        config.r2 = 1.0;
     }
 
-    if (config.maxTimeMs <= 0.0)
+    if (config.c1 <= 0.0)
     {
-        config.maxTimeMs = 1000.0;
+        config.c1 = 1e-6;
     }
 
-    if (config.stepSize < 0)
+    if (config.totalTime <= 0.0)
     {
-        config.stepSize = 0;
+        config.totalTime = 8.0 * kPi;
+    }
+
+    if (config.stepTime <= 0.0)
+    {
+        config.stepTime = config.totalTime / 600.0;
     }
 
     return config;
 }
 
-std::string formatTimeValue(double value)
+std::string buildJpegName(const std::string &baseName, const std::string &suffix, bool keepOriginalName)
 {
-    char *buffer = convertDoubleToStr(value);
-    const std::string result(buffer);
-    delete[] buffer;
-    return result;
+    if (baseName.empty())
+    {
+        return "";
+    }
+
+    if (keepOriginalName)
+    {
+        return baseName;
+    }
+
+    const std::size_t dotPos = baseName.find_last_of('.');
+    if (dotPos == std::string::npos)
+    {
+        return baseName + suffix;
+    }
+
+    return baseName.substr(0, dotPos) + suffix + baseName.substr(dotPos);
 }
 
-void writeHeader(const char *fileName)
+void plotConstSignal(const CircuitWork &circuit, const AppConfig &config)
 {
-    appendTextToFile(fileName, "| кол-во элементов | пузырьковая сортировка | сортировка выбором | сортировка вставками | сортировка слиянием | быстрая сортировка | сортировка Шелла | сортировка подсчётом |\n");
-    appendTextToFile(fileName, "| :--------------: | :--------------------: | :----------------: | :-------------------: | :-----------------: | :----------------: | :---------------: | :------------------: |\n");
+    const std::vector<std::pair<double, double>> source = circuit.getSourceVolt();
+
+    if (config.charge)
+    {
+        Gnuplot::PlotOptions options;
+        options.title = "HW_2: charge";
+        options.xLabel = "time";
+        options.yLabel = "voltage";
+        options.scriptFileName = "hw2_charge.plt";
+        options.jpegFileName = buildJpegName(config.jpegFileName, "_charge", !config.discharge);
+
+        std::vector<Gnuplot::Series> series = {
+            {"E1", "#0B7285", source},
+            {"Uc charge", "#D9480F", circuit.getChargeVolt()},
+        };
+
+        Gnuplot plotter;
+        plotter.plot(options, series);
+    }
+
+    if (config.discharge)
+    {
+        Gnuplot::PlotOptions options;
+        options.title = "HW_2: discharge";
+        options.xLabel = "time";
+        options.yLabel = "voltage";
+        options.scriptFileName = "hw2_discharge.plt";
+        options.jpegFileName = buildJpegName(config.jpegFileName, "_discharge", !config.charge);
+
+        std::vector<Gnuplot::Series> series = {
+            {"E1", "#0B7285", source},
+            {"Uc discharge", "#C2255C", circuit.getDischargeVolt()},
+        };
+
+        Gnuplot plotter;
+        plotter.plot(options, series);
+    }
+}
+
+void plotVariableSignal(const CircuitWork &circuit, const AppConfig &config)
+{
+    Gnuplot::PlotOptions options;
+    options.title = "HW_2: variable signal";
+    options.xLabel = "time";
+    options.yLabel = "voltage";
+    options.scriptFileName = "hw2_signal.plt";
+    options.jpegFileName = config.jpegFileName;
+
+    std::vector<Gnuplot::Series> series = {
+        {"E1", "#0B7285", circuit.getSourceVolt()},
+        {"Uc", "#E03131", circuit.getSignalVolt()},
+    };
+
+    Gnuplot plotter;
+    plotter.plot(options, series);
+}
+
+void printUsage()
+{
+    std::cout << "Usage:\n";
+    std::cout << "  ./app -R1=100k -R2=1k -C1=100u --signal=sin --jpeg=plot.jpeg\n";
 }
 }
 
 int main(int argc, char **argv)
 {
-    const Config config = parseArgs(argc, argv);
-    const std::vector<int> sizes = buildSizes(config);
-
+    try
     {
-        std::ofstream clearFile(kOutputFileName, std::ios::trunc);
-    }
+        const AppConfig config = parseArgs(argc, argv);
 
-    writeHeader(kOutputFileName);
+        const double signalPeriod =
+            config.signal == TypeSignal::constV ? config.totalTime : config.totalTime / 3.0;
 
-    std::vector<SortBenchmark> benchmarks = {
-        {"bubble", bubbleSort, Complexity::quadratic},
-        {"selection", selectionSort, Complexity::quadratic},
-        {"insertion", insertionSort, Complexity::quadratic},
-        {"merge", mergeSort, Complexity::nLogN},
-        {"quick", quickSort, Complexity::nLogN},
-        {"shell", sortShell, Complexity::shell},
-        {"count", countSort, Complexity::linear},
-    };
+        const CircuitWork::ParamCircuit circuitParams(config.c1, config.r1, config.r2);
+        const CircuitWork::ParamVoltSource sourceParams(config.e1, config.signal, signalPeriod);
+        const CircuitWork circuit(circuitParams, sourceParams, config.totalTime, config.stepTime);
 
-    for (const int size : sizes)
-    {
-        int *source = new int[size];
-        randomFillAr(source, size);
-
-        std::string row = "| ";
-        row += std::to_string(size);
-        row += " ";
-
-        for (SortBenchmark &benchmark : benchmarks)
+        if (config.signal == TypeSignal::constV)
         {
-            row += "| ";
-
-            if (!benchmark.isEnabled)
-            {
-                row += "--- ";
-                continue;
-            }
-
-            if (benchmark.hasPreviousMeasurement)
-            {
-                const double estimatedTime =
-                    benchmark.previousTime * estimateGrowth(
-                                                  benchmark.complexity,
-                                                  benchmark.previousSize,
-                                                  size);
-
-                if (estimatedTime > config.maxTimeMs)
-                {
-                    benchmark.isEnabled = false;
-                    row += "--- ";
-                    continue;
-                }
-            }
-
-            const double elapsed = measureSort(benchmark.sortFunc, source, size, lessComp);
-            row += formatTimeValue(elapsed);
-            row += " ";
-
-            benchmark.hasPreviousMeasurement = true;
-            benchmark.previousSize = size;
-            benchmark.previousTime = elapsed;
-
-            if (elapsed > config.maxTimeMs)
-            {
-                benchmark.isEnabled = false;
-            }
+            plotConstSignal(circuit, config);
+        }
+        else
+        {
+            plotVariableSignal(circuit, config);
         }
 
-        row += "|\n";
-        appendTextToFile(kOutputFileName, row);
-
-        delete[] source;
+        std::cout << "R1 = " << config.r1 << " Ohm\n";
+        std::cout << "R2 = " << config.r2 << " Ohm\n";
+        std::cout << "C1 = " << config.c1 << " F\n";
+        std::cout << "E1 = " << config.e1 << " V\n";
+        std::cout << "T  = " << config.totalTime << '\n';
+        std::cout << "dt = " << config.stepTime << '\n';
     }
-
-    std::cout << "Results saved to " << kOutputFileName << std::endl;
-    std::cout << "max_time = " << config.maxTimeMs << " ms" << std::endl;
-    std::cout << "min_size = " << config.minSize << std::endl;
-    std::cout << "max_size = " << config.maxSize << std::endl;
-    if (config.stepSize > 0)
+    catch (const std::exception &error)
     {
-        std::cout << "step_size = " << config.stepSize << std::endl;
-    }
-    else
-    {
-        std::cout << "step_size = variable" << std::endl;
+        std::cerr << "Error: " << error.what() << std::endl;
+        printUsage();
+        return 1;
     }
 
     return 0;
