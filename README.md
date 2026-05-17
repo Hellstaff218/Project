@@ -27,6 +27,15 @@
 
 ## Примеры запуска
 
+### HW_2: декодирование символов из шрифта
+
+```bash
+./scripts/run.sh --font=B --fill=o --background=.
+./scripts/run.sh --font=K --fill=* --background=_
+./scripts/run.sh --font=9 --fill=0 --background=.
+./scripts/run.sh --font=A --fill=# --background=' '
+```
+
 ### HW_2: постоянное напряжение `constV`
 
 ```bash

@@ -1,4 +1,5 @@
 #include "gnuplot.h"
+#include "parse_fonts.h"
 #include "research_cond.h"
 
 #include <cmath>
@@ -23,6 +24,10 @@ struct AppConfig
     bool charge = true;
     bool discharge = true;
     std::string jpegFileName;
+    bool fontMode = false;
+    char fontSymbol = 'B';
+    char fill = '#';
+    char background = ' ';
 };
 
 double parseMetricValue(const std::string &text)
@@ -178,6 +183,31 @@ AppConfig parseArgs(int argc, char **argv)
         {
             config.discharge = parseBoolValue(getValueAfterPrefix(arg, "--discharge="));
         }
+        else if (arg.rfind("--font=", 0) == 0)
+        {
+            const std::string value = getValueAfterPrefix(arg, "--font=");
+            if (!value.empty())
+            {
+                config.fontMode = true;
+                config.fontSymbol = value[0];
+            }
+        }
+        else if (arg.rfind("--fill=", 0) == 0)
+        {
+            const std::string value = getValueAfterPrefix(arg, "--fill=");
+            if (!value.empty())
+            {
+                config.fill = value[0];
+            }
+        }
+        else if (arg.rfind("--background=", 0) == 0)
+        {
+            const std::string value = getValueAfterPrefix(arg, "--background=");
+            if (!value.empty())
+            {
+                config.background = value[0];
+            }
+        }
     }
 
     if (config.r1 <= 0.0)
@@ -292,6 +322,7 @@ void printUsage()
 {
     std::cout << "Usage:\n";
     std::cout << "  ./app -R1=100k -R2=1k -C1=100u --signal=sin --jpeg=plot.jpeg\n";
+    std::cout << "  ./app --font=B --fill=o --background=.\n";
 }
 }
 
@@ -300,6 +331,12 @@ int main(int argc, char **argv)
     try
     {
         const AppConfig config = parseArgs(argc, argv);
+
+        if (config.fontMode)
+        {
+            parse_font(config.fontSymbol, config.fill, config.background);
+            return 0;
+        }
 
         const double signalPeriod =
             config.signal == TypeSignal::constV ? config.totalTime : config.totalTime / 3.0;

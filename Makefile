@@ -5,9 +5,12 @@ BUILD_DIR = build
 SOURCES = main.cpp \
 	sorts.cpp \
 	HW1.cpp \
+	fonts.cpp \
 	gnuplot.cpp \
-	research_cond.cpp
-OBJECTS = $(SOURCES:%.cpp=$(BUILD_DIR)/%.o)
+	research_cond.cpp \
+	parse_fonts.cpp
+C_SOURCES = verdana_8_font.c
+OBJECTS = $(SOURCES:%.cpp=$(BUILD_DIR)/%.o) $(C_SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 all: $(TARGET)
 
@@ -18,6 +21,9 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
